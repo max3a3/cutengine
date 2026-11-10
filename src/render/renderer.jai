@@ -86,8 +86,8 @@ renderer_reload_shaders :: (using ren: *Renderer)
             dir_name=SHADER_DIR,
             recursive=true,
             user_data=null,
-            proc=rewrite_proc,
-        ,, context.per_frame_allocator);
+            proc=rewrite_proc)
+        ,, context.per_frame_allocator;
     }
 
     if #complete backend == {
