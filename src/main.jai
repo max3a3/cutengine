@@ -150,5 +150,5 @@ SHADER_DIR :: #run path_join(ASSETS_DIR, "shader");
 #load "render/renderer.jai";
 #load "game/game.jai";
 
-#import "Basic"()(MEMORY_DEBUGGER = DEBUG); // Enable memory debugger on debug buids.
+#import "Basic";//()(MEMORY_DEBUGGER = DEBUG); // Enable memory debugger on debug buids.
 #import "File_Watcher";

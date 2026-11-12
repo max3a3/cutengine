@@ -2,14 +2,14 @@ platform_init :: (title: string, width: s32, height: s32) -> Window, bool
 {
     SDL_SetAppMetadata("cutengine", "v0.0.1", "com.engine.cutengine");
 
-    ok := SDL_InitSubSystem(.VIDEO);
+    ok := SDL_InitSubSystem(SDL_INIT_VIDEO);
     if !ok {
         log_error("Couldn't initialize SDL: %", SDL_GetErrorString());
         return .{}, false;
     }
 
     // Use high pixel density, otherwise we have blurry edges on MacOS
-    window_flags: SDL_WindowFlags = .HIGH_PIXEL_DENSITY | .RESIZABLE;
+    window_flags: SDL_WindowFlags = SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE;
     sdl_window := SDL_CreateWindow(to_c_string(title,,temp), width, height, window_flags);
     if !sdl_window {
         log_error("Couldn't create SDL window: %", SDL_GetErrorString());
@@ -34,31 +34,31 @@ platform_poll_events :: (window: *Window, input: *Input)
 {
     event: SDL_Event;
     while SDL_PollEvent(*event) {
-	    if event.type == {
-		case .QUIT;
+	    if cast(SDL_EventType) event.type == {
+		case .SDL_EVENT_QUIT;
 		    input.quit_requested = true;
 
         // Keyboard-related events
-		case .KEY_DOWN; #through;
-        case .KEY_UP;
+		case .SDL_EVENT_KEY_DOWN; #through;
+        case .SDL_EVENT_KEY_UP;
             if event.key.repeat  continue;
             key := translate_sdl_key(event.key.scancode);
             if key == .UNKNOWN  continue;
 
             b := *input.keyboard_buttons[key];
-            b.ended_down = event.type == .KEY_DOWN;
+            b.ended_down = cast(SDL_EventType) event.type == .SDL_EVENT_KEY_DOWN;
             b.half_transitions += 1;
 
         // Mouse-related events
-        case .MOUSE_BUTTON_DOWN; #through;
-        case .MOUSE_BUTTON_UP;
+        case .SDL_EVENT_MOUSE_BUTTON_DOWN; #through;
+        case .SDL_EVENT_MOUSE_BUTTON_UP;
             button := translate_sdl_mouse_button(event.button.button);
             b := *input.mouse_buttons[button];
-            b.ended_down = event.type == .MOUSE_BUTTON_DOWN;
+            b.ended_down = cast(SDL_EventType)event.type == .SDL_EVENT_MOUSE_BUTTON_DOWN;
             b.half_transitions += 1;
-        case .MOUSE_WHEEL;
+        case .SDL_EVENT_MOUSE_WHEEL;
             input.mouse_scroll_wheel += event.wheel.y;
-        case .MOUSE_MOTION;
+        case .SDL_EVENT_MOUSE_MOTION;
             input.mouse_pos.x = event.motion.x;
             input.mouse_pos.y = event.motion.y;
             input.mouse_delta.x += event.motion.xrel;
@@ -97,75 +97,75 @@ translate_sdl_key :: (sdl_key: SDL_Scancode) -> Keyboard_Key
     SDL :: SDL_Scancode; MY :: Keyboard_Key;
 
     if sdl_key == {
-        case SDL.Q; return MY.Q;
-        case SDL.W; return MY.W;
-        case SDL.E; return MY.E;
-        case SDL.R; return MY.R;
-        case SDL.T; return MY.T;
-        case SDL.Y; return MY.Y;
-        case SDL.U; return MY.U;
-        case SDL.I; return MY.I;
-        case SDL.O; return MY.O;
-        case SDL.P; return MY.P;
+        case SDL_SCANCODE_Q; return MY.Q;
+        case SDL_SCANCODE_W; return MY.W;
+        case SDL_SCANCODE_E; return MY.E;
+        case SDL_SCANCODE_R; return MY.R;
+        case SDL_SCANCODE_T; return MY.T;
+        case SDL_SCANCODE_Y; return MY.Y;
+        case SDL_SCANCODE_U; return MY.U;
+        case SDL_SCANCODE_I; return MY.I;
+        case SDL_SCANCODE_O; return MY.O;
+        case SDL_SCANCODE_P; return MY.P;
 
-        case SDL.A; return MY.A;
-        case SDL.S; return MY.S;
-        case SDL.D; return MY.D;
-        case SDL.F; return MY.F;
-        case SDL.G; return MY.G;
-        case SDL.H; return MY.H;
-        case SDL.J; return MY.J;
-        case SDL.K; return MY.K;
-        case SDL.L; return MY.L;
+        case SDL_SCANCODE_A; return MY.A;
+        case SDL_SCANCODE_S; return MY.S;
+        case SDL_SCANCODE_D; return MY.D;
+        case SDL_SCANCODE_F; return MY.F;
+        case SDL_SCANCODE_G; return MY.G;
+        case SDL_SCANCODE_H; return MY.H;
+        case SDL_SCANCODE_J; return MY.J;
+        case SDL_SCANCODE_K; return MY.K;
+        case SDL_SCANCODE_L; return MY.L;
 
-        case SDL.Z; return MY.Z;
-        case SDL.X; return MY.X;
-        case SDL.C; return MY.C;
-        case SDL.V; return MY.V;
-        case SDL.B; return MY.B;
-        case SDL.N; return MY.N;
-        case SDL.M; return MY.M;
+        case SDL_SCANCODE_Z; return MY.Z;
+        case SDL_SCANCODE_X; return MY.X;
+        case SDL_SCANCODE_C; return MY.C;
+        case SDL_SCANCODE_V; return MY.V;
+        case SDL_SCANCODE_B; return MY.B;
+        case SDL_SCANCODE_N; return MY.N;
+        case SDL_SCANCODE_M; return MY.M;
 
-        case SDL._1; return MY.NUM_1;
-        case SDL._2; return MY.NUM_2;
-        case SDL._3; return MY.NUM_3;
-        case SDL._4; return MY.NUM_4;
-        case SDL._5; return MY.NUM_5;
-        case SDL._6; return MY.NUM_6;
-        case SDL._7; return MY.NUM_7;
-        case SDL._8; return MY.NUM_8;
-        case SDL._9; return MY.NUM_9;
-        case SDL._0; return MY.NUM_0;
+        case SDL_SCANCODE_1; return MY.NUM_1;
+        case SDL_SCANCODE_2; return MY.NUM_2;
+        case SDL_SCANCODE_3; return MY.NUM_3;
+        case SDL_SCANCODE_4; return MY.NUM_4;
+        case SDL_SCANCODE_5; return MY.NUM_5;
+        case SDL_SCANCODE_6; return MY.NUM_6;
+        case SDL_SCANCODE_7; return MY.NUM_7;
+        case SDL_SCANCODE_8; return MY.NUM_8;
+        case SDL_SCANCODE_9; return MY.NUM_9;
+        case SDL_SCANCODE_0; return MY.NUM_0;
 
-        case SDL.LEFT;  return MY.LEFT_ARROW;
-        case SDL.RIGHT; return MY.RIGHT_ARROW;
-        case SDL.UP;    return MY.UP_ARROW;
-        case SDL.DOWN;  return MY.DOWN_ARROW;
+        case SDL_SCANCODE_LEFT;  return MY.LEFT_ARROW;
+        case SDL_SCANCODE_RIGHT; return MY.RIGHT_ARROW;
+        case SDL_SCANCODE_UP;    return MY.UP_ARROW;
+        case SDL_SCANCODE_DOWN;  return MY.DOWN_ARROW;
 
-        case SDL.MINUS;        return MY.MINUS;
-        case SDL.EQUALS;       return MY.EQUALS;
-        case SDL.LEFTBRACKET;  return MY.LEFT_BRACKET;
-        case SDL.RIGHTBRACKET; return MY.RIGHT_BRACKET;
-        case SDL.BACKSLASH;    return MY.BACKSLASH;
-        case SDL.SEMICOLON;    return MY.SEMICOLON;
-        case SDL.APOSTROPHE;   return MY.TICK;
-        case SDL.COMMA;        return MY.COMMA;
-        case SDL.PERIOD;       return MY.DOT;
-        case SDL.SLASH;        return MY.SLASH;
-        case SDL.GRAVE;        return MY.BACKTICK;
+        case SDL_SCANCODE_MINUS;        return MY.MINUS;
+        case SDL_SCANCODE_EQUALS;       return MY.EQUALS;
+        case SDL_SCANCODE_LEFTBRACKET;  return MY.LEFT_BRACKET;
+        case SDL_SCANCODE_RIGHTBRACKET; return MY.RIGHT_BRACKET;
+        case SDL_SCANCODE_BACKSLASH;    return MY.BACKSLASH;
+        case SDL_SCANCODE_SEMICOLON;    return MY.SEMICOLON;
+        case SDL_SCANCODE_APOSTROPHE;   return MY.TICK;
+        case SDL_SCANCODE_COMMA;        return MY.COMMA;
+        case SDL_SCANCODE_PERIOD;       return MY.DOT;
+        case SDL_SCANCODE_SLASH;        return MY.SLASH;
+        case SDL_SCANCODE_GRAVE;        return MY.BACKTICK;
 
-        case SDL.LSHIFT; return MY.LEFT_SHIFT;
-        case SDL.RSHIFT; return MY.RIGHT_SHIFT;
-        case SDL.LCTRL;  return MY.LEFT_CTRL;
-        case SDL.RCTRL;  return MY.RIGHT_CTRL;
-        case SDL.LALT;   return MY.LEFT_ALT;    // Option on Mac
-        case SDL.RALT;   return MY.RIGHT_ALT;
-        case SDL.LGUI;   return MY.LEFT_CMD;    // Cmd on Mac, Windows key on PC
-        case SDL.RGUI;   return MY.RIGHT_CMD;   // Mac only
+        case SDL_SCANCODE_LSHIFT; return MY.LEFT_SHIFT;
+        case SDL_SCANCODE_RSHIFT; return MY.RIGHT_SHIFT;
+        case SDL_SCANCODE_LCTRL;  return MY.LEFT_CTRL;
+        case SDL_SCANCODE_RCTRL;  return MY.RIGHT_CTRL;
+        case SDL_SCANCODE_LALT;   return MY.LEFT_ALT;    // Option on Mac
+        case SDL_SCANCODE_RALT;   return MY.RIGHT_ALT;
+        case SDL_SCANCODE_LGUI;   return MY.LEFT_CMD;    // Cmd on Mac, Windows key on PC
+        case SDL_SCANCODE_RGUI;   return MY.RIGHT_CMD;   // Mac only
 
-        case SDL.RETURN; return MY.RETURN;
-        case SDL.DELETE; return MY.DELETE;
-        case SDL.ESCAPE; return MY.ESCAPE;
+        case SDL_SCANCODE_RETURN; return MY.RETURN;
+        case SDL_SCANCODE_DELETE; return MY.DELETE;
+        case SDL_SCANCODE_ESCAPE; return MY.ESCAPE;
     }
 
     return .UNKNOWN;

@@ -1,5 +1,10 @@
 // #region GPU data
-
+SDL_GetErrorString::()->string {
+    error := SDL_GetError();
+    length := 0;
+    while error[length] != 0  length += 1;
+    return .{data = error, count = length};
+}
 #scope_export
 
 sdl_gpu_renderer_make :: (window: *Window) -> Gpu_Renderer_Data, bool
@@ -17,17 +22,17 @@ sdl_gpu_renderer_make :: (window: *Window) -> Gpu_Renderer_Data, bool
     assert(device_window_ok, "Couldn't claim window for GPU device: %", SDL_GetErrorString());
 
     // Try to enable VSync
-    if !SDL_SetGPUSwapchainParameters(device, sdl_window, .SDR, .VSYNC) {
+    if !SDL_SetGPUSwapchainParameters(device, sdl_window, .SDL_GPU_SWAPCHAINCOMPOSITION_SDR, .SDL_GPU_PRESENTMODE_VSYNC) {
         log_error("Couldn't enable VSync: %", SDL_GetErrorString());
     }
 
     pixel_sampler_create_info := SDL_GPUSamplerCreateInfo.{
-        min_filter = .NEAREST,
-        mag_filter = .NEAREST,
-        mipmap_mode = .NEAREST,
-        address_mode_u = .CLAMP_TO_EDGE,
-        address_mode_v = .CLAMP_TO_EDGE,
-        address_mode_w = .CLAMP_TO_EDGE,
+        min_filter = .SDL_GPU_FILTER_NEAREST,
+        mag_filter = .SDL_GPU_FILTER_NEAREST,
+        mipmap_mode = .SDL_GPU_SAMPLERMIPMAPMODE_NEAREST,
+        address_mode_u = .SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+        address_mode_v = .SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+        address_mode_w = .SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
     };
     sampler := SDL_CreateGPUSampler(device, *pixel_sampler_create_info);
     assert(sampler != null, "Couldn't create sampler: %", SDL_GetErrorString());
@@ -78,7 +83,7 @@ sdl_gpu_upload_texture :: (data: *Gpu_Renderer_Data, texture_data: Cpu_Texture) 
     // Albedo (base) texture
     texture_image := SDL_CreateSurfaceFrom(
         xx texture_data.width, xx texture_data.height,
-        .RGBA32,
+        .SDL_PIXELFORMAT_RGBA32,
         texture_data.pixels,
         cast(s32) texture_data.pitch,
     );
@@ -94,7 +99,7 @@ sdl_gpu_upload_texture :: (data: *Gpu_Renderer_Data, texture_data: Cpu_Texture) 
     // @TODO: Check format, may differ from albedo or other kinds of textures.
     texture_create_info := SDL_GPUTextureCreateInfo.{
         type = .SDL_GPU_TEXTURETYPE_2D,
-        format = .R8G8B8A8_UNORM,
+        format = .SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
         usage = SDL_GPU_TEXTUREUSAGE_SAMPLER,
         width = tex_w,
         height = tex_h,
@@ -105,7 +110,7 @@ sdl_gpu_upload_texture :: (data: *Gpu_Renderer_Data, texture_data: Cpu_Texture) 
     assert(texture != null, "Couldn't create texture: %", SDL_GetErrorString());
 
     transfer_buffer_info := SDL_GPUTransferBufferCreateInfo.{
-        usage = .UPLOAD,
+        usage = .SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
         size = tex_w * tex_h * 4
     };
     transfer_buffer := SDL_CreateGPUTransferBuffer(data.device, *transfer_buffer_info);
@@ -185,7 +190,7 @@ sdl_gpu_upload_mesh :: (data: *Gpu_Renderer_Data, mesh_data: Cpu_Mesh) -> Mesh_H
     transfer_size := vertices_size + indices_size;
 
     transfer_buffer_info := SDL_GPUTransferBufferCreateInfo.{
-        usage = .UPLOAD,
+        usage = .SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
         size = transfer_size
     };
 
@@ -300,7 +305,7 @@ sdl_gpu_renderer_execute_commands :: (window: *Window, data: *Gpu_Renderer_Data,
 
                 SDL_BindGPUGraphicsPipeline(frame.pass, data.pipelines[cmd.pipeline]);
                 SDL_BindGPUVertexBuffers(frame.pass, 0, *vertex_binding, 1);
-                SDL_BindGPUIndexBuffer(frame.pass, *index_binding, SDL_GPUIndexElementSize._32BIT);
+                SDL_BindGPUIndexBuffer(frame.pass, *index_binding, SDL_GPUIndexElementSize.SDL_GPU_INDEXELEMENTSIZE_32BIT);
                 SDL_BindGPUFragmentSamplers(frame.pass, 0, sampler_bindings.data, 1);
                 SDL_PushGPUVertexUniformData(frame.command_buffer, 1, *cmd.uniforms, size_of(cmd.Uniforms));
                 SDL_PushGPUFragmentUniformData(frame.command_buffer, 1, *cmd.material.properties, size_of(Material_Properties));
@@ -327,7 +332,7 @@ sdl_gpu_renderer_execute_commands :: (window: *Window, data: *Gpu_Renderer_Data,
                 SDL_BindGPUGraphicsPipeline(frame.pass, data.pipelines[cmd.pipeline]);
                 SDL_BindGPUVertexBuffers(frame.pass, 0, *vertex_binding, 1);
                 SDL_BindGPUVertexStorageBuffers(frame.pass, 0, *data.instance_buffer, 1);
-                SDL_BindGPUIndexBuffer(frame.pass, *index_binding, SDL_GPUIndexElementSize._32BIT);
+                SDL_BindGPUIndexBuffer(frame.pass, *index_binding, SDL_GPUIndexElementSize.SDL_GPU_INDEXELEMENTSIZE_32BIT);
                 SDL_BindGPUFragmentSamplers(frame.pass, 0, sampler_bindings.data, 1);
                 SDL_PushGPUVertexUniformData(frame.command_buffer, 1, *cmd.uniforms, size_of(cmd.Uniforms));
                 SDL_PushGPUFragmentUniformData(frame.command_buffer, 1, *cmd.material.properties, size_of(Material_Properties));
@@ -399,8 +404,8 @@ renderer_begin_frame :: (window: *Window, data: *Gpu_Renderer_Data, list: *Rende
 
     depth_stencil_target_info := SDL_GPUDepthStencilTargetInfo.{
         texture = data.depth_texture,
-        load_op = .CLEAR,
-        store_op = .DONT_CARE,
+        load_op = .SDL_GPU_LOADOP_CLEAR,
+        store_op = .SDL_GPU_STOREOP_DONT_CARE,
         clear_depth = 1,
     };
 
@@ -415,8 +420,8 @@ renderer_begin_frame :: (window: *Window, data: *Gpu_Renderer_Data, list: *Rende
     cti: SDL_GPUColorTargetInfo;
     cti.texture = swapchain_texture;
     cti.clear_color = cast,force(SDL_FColor) list.clear_color;
-    cti.load_op = .CLEAR;
-    cti.store_op = .STORE;
+    cti.load_op = .SDL_GPU_LOADOP_CLEAR;
+    cti.store_op = .SDL_GPU_STOREOP_STORE;
 
     frame.pass = SDL_BeginGPURenderPass(frame.command_buffer, *cti, 1, *depth_stencil_target_info);
     return frame, true;
@@ -457,7 +462,7 @@ upload_instance_data :: (data: *Gpu_Renderer_Data, instances: []Render_Instance)
 
     // Create transfer buffer to send buffer to GPU
     transfer_buffer_info := SDL_GPUTransferBufferCreateInfo.{
-        usage = .UPLOAD,
+        usage = .SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
         size = size,
     };
 
@@ -508,8 +513,8 @@ load_shader :: (device: *SDL_GPUDevice, name: string) -> *SDL_GPUShader
 
     stage: SDL_GPUShaderStage;
     if shader.stage == {
-    case .VERTEX;   stage = .VERTEX;
-    case .FRAGMENT; stage = .FRAGMENT;
+    case .VERTEX;   stage = .SDL_GPU_SHADERSTAGE_VERTEX;
+    case .FRAGMENT; stage = .SDL_GPU_SHADERSTAGE_FRAGMENT;
     case;
         log_error("Shader % is invalid", name);
         return null;
@@ -557,12 +562,12 @@ create_pipeline :: (window: *SDL_Window, device: *SDL_GPUDevice, desc: Pipeline_
             format = SDL_GetGPUSwapchainTextureFormat(device, window),
             blend_state = {
                 enable_blend = true,
-                color_blend_op = .ADD,
-                alpha_blend_op = .ADD,
-                src_color_blendfactor = .SRC_ALPHA,
-                dst_color_blendfactor = .ONE_MINUS_SRC_ALPHA,
-                src_alpha_blendfactor = .SRC_ALPHA,
-                dst_alpha_blendfactor = .ONE_MINUS_SRC_ALPHA,
+                color_blend_op = .SDL_GPU_BLENDOP_ADD,
+                alpha_blend_op = .SDL_GPU_BLENDOP_ADD,
+                src_color_blendfactor = .SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+                dst_color_blendfactor = .SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+                src_alpha_blendfactor = .SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+                dst_alpha_blendfactor = .SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
             }
         }
     ];
@@ -580,9 +585,9 @@ create_pipeline :: (window: *SDL_Window, device: *SDL_GPUDevice, desc: Pipeline_
             vertex_attributes = VERTEX_ATTRIBUTES.data,
             num_vertex_attributes = VERTEX_ATTRIBUTES.count
         },
-        primitive_type = .TRIANGLELIST,
+        primitive_type = .SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
         rasterizer_state = SDL_GPURasterizerState.{
-            fill_mode = .FILL,
+            fill_mode = .SDL_GPU_FILLMODE_FILL,
         },
         target_info = SDL_GPUGraphicsPipelineTargetInfo.{
             color_target_descriptions = color_target_description.data,
@@ -591,7 +596,7 @@ create_pipeline :: (window: *SDL_Window, device: *SDL_GPUDevice, desc: Pipeline_
             has_depth_stencil_target = true,
         },
         depth_stencil_state = SDL_GPUDepthStencilState.{
-            compare_op = .LESS,
+            compare_op = .SDL_GPU_COMPAREOP_LESS,
             enable_depth_test = true,
             enable_depth_write = true,
         }
@@ -603,20 +608,20 @@ create_pipeline :: (window: *SDL_Window, device: *SDL_GPUDevice, desc: Pipeline_
 get_supported_depth_format :: (device: *SDL_GPUDevice) -> SDL_GPUTextureFormat
 {
     possible_formats := SDL_GPUTextureFormat.[
-        .D32_FLOAT_S8_UINT,
-        .D24_UNORM_S8_UINT,
-        .D32_FLOAT,
-        .D24_UNORM,
-        .D16_UNORM,
+        .SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT,
+        .SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT,
+        .SDL_GPU_TEXTUREFORMAT_D32_FLOAT,
+        .SDL_GPU_TEXTUREFORMAT_D24_UNORM,
+        .SDL_GPU_TEXTUREFORMAT_D16_UNORM,
     ];
 
     for possible_formats {
-        if SDL_GPUTextureSupportsFormat(device, it, ._2D, SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET) {
+        if SDL_GPUTextureSupportsFormat(device, it, .SDL_GPU_TEXTURETYPE_2D, SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET) {
             return it;
         }
     }
 
-    return .INVALID;
+    return .SDL_GPU_TEXTUREFORMAT_INVALID;
 }
 
 // @TODO: This should be backend-specific but used by the game layer, maybe?
@@ -657,7 +662,7 @@ Gpu_Texture :: struct {
 
 // What am I going to send?
 VERTEX_BUFFER_DESCRIPTIONS :: SDL_GPUVertexBufferDescription.[
-    .{ slot = 0, pitch = size_of(Vertex), input_rate = .VERTEX, instance_step_rate = 0 }
+    .{ slot = 0, pitch = size_of(Vertex), input_rate = .SDL_GPU_VERTEXINPUTRATE_VERTEX, instance_step_rate = 0 }
 ];
 
 VERTEX_ATTRIBUTES_COUNT :: #run field_count(Vertex);
@@ -690,10 +695,10 @@ make_vertex_attributes :: ($T: Type) -> [VERTEX_ATTRIBUTES_COUNT]SDL_GPUVertexAt
         if member.flags & (.CONSTANT | .OVERLAY)  continue;
 
         format: SDL_GPUVertexElementFormat;
-        if member.type == type_info(Vector2)       format = .FLOAT2;
-        else if member.type == type_info(Vector3)  format = .FLOAT3;
-        else if member.type == type_info(Vector4)  format = .FLOAT4;
-        else if member.type == type_info(float32)  format = .FLOAT;
+        if member.type == type_info(Vector2)       format = .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+        else if member.type == type_info(Vector3)  format = .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
+        else if member.type == type_info(Vector4)  format = .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4;
+        else if member.type == type_info(float32)  format = .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT;
         else assert(false, "Vertex member '%' has type with no vertex format mapping.", member.name);
 
         attributes[i] = .{

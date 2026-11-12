@@ -72,7 +72,7 @@ renderer_load_mesh :: (using ren: *Renderer, mesh: Cpu_Mesh) -> Mesh_Handle
 
 renderer_reload_shaders :: (using ren: *Renderer)
 {
-    log_info("Reloading shaders");
+    log("Reloading shaders");
 
     #if DEBUG {
         // On debug, hot-reload by writing assets files.
