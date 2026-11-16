@@ -26,7 +26,7 @@ Output main(Input input)
     Output output;
     output.TexCoord = input.TexCoord;
     output.Normal = mul((float3x3) Model, input.Normal); // Rotate normals with object
-    output.CurrentPos = world;
+    output.CurrentPos = world.xyz;
     output.ViewDir = CameraPosition - world.xyz;
     output.Position = mul(ViewProjection, world);
     return output;
