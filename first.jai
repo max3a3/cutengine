@@ -11,7 +11,7 @@ build :: ()
     build_options.output_executable_name = "cutengine";
     // build_options.additional_linker_arguments = .["-rpath", "@loader_path/../lib"]; // Link SDL3
     build_options.temporary_storage_size = 8 * 1024 * 1024; // Default to 8 MiB for per-frame allocations
-    // set_build_options_dc(.{do_output = false});
+    set_build_options_dc(.{do_output = false});
     set_working_directory(#filepath);
 
     force_asset_rebake := false;
@@ -33,7 +33,7 @@ build :: ()
         set_optimization(*build_options, .DEBUG);
         build_options.output_path = "build_debug";
     }
-
+    make_directory_if_it_does_not_exist("./temp");// for window shadercross
     bake_shaders();
     convert_assets(force_asset_rebake);
     if force_asset_rebake  print("\n");

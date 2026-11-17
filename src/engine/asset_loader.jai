@@ -68,6 +68,9 @@ load_model_asset :: (asset: string) -> Cpu_Model, bool
     return model, true;
 }
 
+get_default_material::() -> Cpu_Material {
+    return DEFAULT_MATERIAL_DATA;
+}
 load_shader_asset :: (asset: string) -> Cpu_Shader, bool
 {
     reader, ok := load_asset_begin(asset);

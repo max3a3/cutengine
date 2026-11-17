@@ -1,3 +1,5 @@
+// DEBUG :: true;
+
 engine_logger :: (message: string, data: *void, info: Log_Info)
 {
     if !message  return;
@@ -148,7 +150,10 @@ SHADER_DIR :: #run path_join(ASSETS_DIR, "shader");
 #load "engine/scene.jai";
 #load "engine/model.jai";
 #load "render/renderer.jai";
-#load "game/game.jai";
+
+// #load "game/game.jai";
+#load "game/game0.jai";
+// #load "game/boids.jai";
 
 #import "Basic";//()(MEMORY_DEBUGGER = DEBUG); // Enable memory debugger on debug buids.
 #import "File_Watcher";

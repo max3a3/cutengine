@@ -5,3 +5,4 @@ lib/
 assets/
 
 !assets/shader/*
+temp/
