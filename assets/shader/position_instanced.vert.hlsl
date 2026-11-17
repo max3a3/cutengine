@@ -30,7 +30,7 @@ Output main(Input input)
     Output output;
     output.TexCoord = input.TexCoord;
     output.Normal = input.Normal;
-    output.CurrentPos = world;
+    output.CurrentPos = world.xyz;
     output.ViewDir = CameraPosition - world.xyz;
     output.Position = mul(ViewProjection, world);
     return output;

@@ -44,7 +44,7 @@ Output main(Input input)
     float specular_intensity_smooth = smoothstep(0.005, 0.01, specular_intensity);
     float4 specular = specular_intensity_smooth * float4(SpecularStrength.xxx, 1.0);
 
-    float4 rim_dot = 1 - dot(view_dir, normal);
+    float rim_dot = 1 - dot(view_dir, normal);
     float rim_amount = smoothstep(0.715, 0.720, rim_dot);
 
     float4 albedo = BaseColor * Texture.Sample(Sampler, input.TexCoord);
@@ -52,6 +52,6 @@ Output main(Input input)
     float4 light = light_intensity * Light.Color;
 
     Output output;
-    output.Color = float4(albedo.rgb * (ambient + light + specular + rim_amount), albedo.a);
+    output.Color = float4(albedo.rgb * (ambient.rgb + light.rgb + specular.rgb + rim_amount), albedo.a);
     return output;
 }
